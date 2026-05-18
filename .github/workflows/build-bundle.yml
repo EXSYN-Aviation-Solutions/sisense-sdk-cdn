@@ -1,0 +1,56 @@
+name: Build and publish Sisense SDK bundle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sdk/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create SDK package.json
+        run: |
+          cat > sdk/package.json << 'EOF'
+          {
+            "name": "sisense-sdk-bundle-builder",
+            "private": true,
+            "dependencies": {
+              "@sisense/sdk-ui-vue": "2.26.0",
+              "@sisense/sdk-data": "2.26.0"
+            },
+            "devDependencies": {
+              "vite": "^5.0.0"
+            }
+          }
+          EOF
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: sdk
+
+      - name: Build bundle
+        run: npx vite build
+        working-directory: sdk
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add sisense.bundle.js
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: rebuild Sisense SDK bundle [skip ci]"
+            git push
+          fi
