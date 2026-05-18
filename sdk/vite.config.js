@@ -4,11 +4,17 @@ export default defineConfig({
     build: {
         lib: {
             entry: './index.js',
-            formats: ['es'],
+            formats: ['iife'],
+            name: 'SisenseSDK',
             fileName: () => 'sisense.bundle.js',
         },
         rollupOptions: {
             external: ['vue'],
+            output: {
+                globals: {
+                    vue: 'Vue',
+                },
+            },
         },
         outDir: '../',
         emptyOutDir: false,
